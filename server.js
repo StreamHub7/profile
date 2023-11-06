@@ -4,24 +4,6 @@ const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
 const port = process.env.PORT || 5001;
-const cron = require('node-cron');
-let playbackId = 1540025276;
-
-// Function to increment playback ID and reset it at the end of each day.
-async function updatePlaybackId() {
-  playbackId += 3;
-  console.log(`Playback ID incremented to ${playbackId}`);
-}
-
-// Schedule the task to run at the end of the day.
-cron.schedule('0 0 * * *', () => {
-  // This will run every day at midnight (0:00).
-  updatePlaybackId();
-});
-
-// Start the cron job.
-console.log('Auto-increment playback ID job is running...'+playbackId);
-
 
 async function fetchDataAndStore(lang, playbackId) {
   try {
