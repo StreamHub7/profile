@@ -38,7 +38,8 @@ async function fetchDataAndStore(lang) {
                 "X-Hs-Request-Id": reqId,
                 "Content-Type": "application/json",
                 "X-Hs-Client": "platform:web;browser:Chrome",
-                "X-Hs-Usertoken": userToken
+                "X-Hs-Usertoken": userToken,
+                "Host": "www.hotstar.com",
             }
         })
 
