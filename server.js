@@ -3,11 +3,9 @@ const express = require('express');
 const dotenv = require('dotenv');
 dotenv.config();
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 5001;
 const cron = require('node-cron');
-const userToken = process.env.USER_TOKEN;
-const reqId = process.env.REQUEST_ID;
-let playbackId = 1540025274;
+let playbackId = 1540025276;
 
 // Function to increment playback ID and reset it at the end of each day.
 async function updatePlaybackId() {
@@ -21,25 +19,43 @@ cron.schedule('0 0 * * *', () => {
   updatePlaybackId();
 });
 
-// cron.schedule('*/15 * * * * *', () => {
-//   updatePlaybackId();
-// });
-
 // Start the cron job.
 console.log('Auto-increment playback ID job is running...'+playbackId);
 
 
-async function fetchDataAndStore(lang) {
+async function fetchDataAndStore(lang, playbackId) {
   try {
-    const reqPayload = {"os_name":"Windows","os_version":"10","app_version":"23.10.20.4","platform_version":"119","client_capabilities":{"ads":["non_ssai"],"audio_channel":["stereo"],"container":["fmp4","fmp4br","ts"],"dvr":["short"],"dynamic_range":["sdr"],"encryption":["widevine","plain"],"ladder":["web","tv","phone"],"package":["dash","hls"],"resolution":["sd","hd"],"video_codec":["h265","h264"],"true_resolution":["sd","hd","fhd"]},"drm_parameters":{"hdcp_version":["HDCP_V2_2"],"widevine_security_level":["SW_SECURE_DECODE"]},"language":lang,"resolution":"auto"};
-  
+    const reqPayload = {
+      "os_name": "Windows",
+      "os_version": "10",
+      "app_version": "23.10.20.4",
+      "platform_version": "119",
+      "client_capabilities": {
+        "ads": ["non_ssai"],
+        "audio_channel": ["stereo"],
+        "container": ["ts"],
+        "dvr": ["short"],
+        "dynamic_range": ["sdr"],
+        "encryption": ["plain"],
+        "ladder": ["web", "tv", "phone"],
+        "package": ["hls"],
+        "resolution": ["hd"],
+        "video_codec": ["h265", "h264"],
+        "true_resolution": ["hd"]
+      },
+      "language": lang,
+      "resolution": "auto"
+    }
+
+    const userToken = process.env.USER_TOKEN;
+    const reqId = process.env.REQUEST_ID;
         const response = await axios.post(`https://www.hotstar.com/play/v5/playback/content/${playbackId}`, JSON.stringify(reqPayload),{
             headers:{
                 "X-Hs-Request-Id": reqId,
                 "Content-Type": "application/json",
                 "X-Hs-Client": "platform:web;browser:Chrome",
                 "X-Hs-Usertoken": userToken,
-                "Host": "www.hotstar.com",
+                "X-Hs-Platform": "web",
             }
         })
 
@@ -54,10 +70,10 @@ async function fetchDataAndStore(lang) {
   }
 }
 
-app.get('/api/data', async (req, res) => {
+app.post('/api/data', async (req, res) => {
   try {
-    const data = await fetchDataAndStore(req.query.lang);
-    res.json({playback_id: playbackId, stream_url: data});
+    const data = await fetchDataAndStore(req.query.lang,req.query.playbackId);
+    res.json({playback_id: req.query.playbackId, stream_url: data});
   } catch (error) {
     console.error('Error fetching data:', error);
     res.status(500).json({ error: 'Failed to fetch data' });
